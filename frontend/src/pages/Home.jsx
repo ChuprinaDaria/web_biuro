@@ -1,3 +1,4 @@
+import SEO from '../components/SEO';
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import About from '../components/About';
@@ -10,6 +11,7 @@ import CookieBanner from '../components/CookieBanner';
 const Home = () => {
   return (
     <>
+      <SEO />
       <Header />
       <main>
         <Hero />
