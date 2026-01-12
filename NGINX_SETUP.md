@@ -3,8 +3,10 @@
 ## Конфігурація для atbalance.pl
 
 Файл `nginx-atbalance.conf` містить повну конфігурацію Nginx для проекту ATBalance з нестандартними портами:
-- **Frontend**: `127.0.0.1:5174`
-- **Backend**: `127.0.0.1:8001`
+- **Frontend**: `host.docker.internal:5174` (якщо Nginx в Docker) або `127.0.0.1:5174` (якщо Nginx на хості)
+- **Backend**: `host.docker.internal:8001` (якщо Nginx в Docker) або `127.0.0.1:8001` (якщо Nginx на хості)
+
+**Примітка:** Якщо Nginx працює на хост-машині (не в Docker), змініть `host.docker.internal` на `127.0.0.1` в upstream блоках.
 
 ## Встановлення
 
@@ -99,6 +101,11 @@ curl https://atbalance.pl/health
 - Backend працює на `8001` (замість стандартного 8000)
 
 Це дозволяє використовувати окремий Nginx сервіс для проксирування.
+
+### Docker vs Host
+
+- Якщо Nginx працює в Docker контейнері: використовується `host.docker.internal`
+- Якщо Nginx працює на хост-машині: змініть на `127.0.0.1` в upstream блоках
 
 ### Маршрутизація
 
