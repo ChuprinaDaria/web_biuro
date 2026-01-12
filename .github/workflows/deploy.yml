@@ -137,9 +137,18 @@ jobs:
           script: |
             cd $DEPLOY_PATH || exit 1
             
+            # Extract username from repository (chuprinadaria/web_biuro -> chuprinadaria)
+            GITHUB_USERNAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
+            
             # Login to GitHub Container Registry (non-interactive)
-            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin || {
+            if [ -z "$GITHUB_USERNAME" ]; then
+              GITHUB_USERNAME="chuprinadaria"
+            fi
+            
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_USERNAME" --password-stdin || {
               echo "Failed to login to GitHub Container Registry"
+              echo "Repository: $GITHUB_REPOSITORY"
+              echo "Username: $GITHUB_USERNAME"
               exit 1
             }
             
