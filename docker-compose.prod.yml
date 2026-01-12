@@ -24,8 +24,8 @@ services:
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-biuro@atbalance.pl}
       - SERVER_EMAIL=${SERVER_EMAIL:-biuro@atbalance.pl}
     volumes:
-      - backend_media:/app/media
-      - backend_static:/app/staticfiles
+      - ./media_volume:/app/media
+      - ./static_volume:/app/staticfiles
     networks:
       - atbalance_network
     healthcheck:
@@ -50,9 +50,6 @@ services:
       timeout: 10s
       retries: 3
 
-volumes:
-  backend_media:
-  backend_static:
 
 networks:
   atbalance_network:

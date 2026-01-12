@@ -194,11 +194,17 @@ jobs:
               git reset --hard origin/main
             fi
             
-            # 3. Now that docker-compose.prod.yml exists, stop old containers
+            # 3. Create directories for static and media files
+            echo "=== Creating directories for static and media files ==="
+            mkdir -p static_volume media_volume || {
+              echo "Warning: Failed to create static/media directories"
+            }
+            
+            # 4. Now that docker-compose.prod.yml exists, stop old containers
             echo "=== Stopping old containers ==="
             docker compose -f docker-compose.prod.yml down --remove-orphans || true
             
-            # 4. Create .env file from GitHub Secrets
+            # 5. Create .env file from GitHub Secrets
             echo "=== Creating .env file ==="
             {
               echo "SECRET_KEY=$SECRET_KEY"
@@ -216,11 +222,33 @@ jobs:
               echo "SERVER_EMAIL=$SERVER_EMAIL"
             } > .env
             
-            # 5. Set image environment variables
+            # 6. Update nginx configuration
+            echo "=== Updating nginx configuration ==="
+            if [ -f "nginx-atbalance.conf" ]; then
+              # Remove old symlink if exists
+              sudo rm -f /etc/nginx/sites-enabled/atbalance
+              # Create new symlink
+              sudo ln -s "$DEPLOY_PATH/nginx-atbalance.conf" /etc/nginx/sites-enabled/atbalance || {
+                echo "Warning: Failed to create nginx symlink"
+              }
+              # Test nginx configuration
+              sudo nginx -t && {
+                # Reload nginx if test passed
+                sudo systemctl reload nginx || sudo systemctl restart nginx || {
+                  echo "Warning: Failed to reload nginx, but continuing..."
+                }
+              } || {
+                echo "Warning: Nginx configuration test failed, but continuing..."
+              }
+            else
+              echo "Warning: nginx-atbalance.conf not found, skipping nginx update"
+            fi
+            
+            # 7. Set image environment variables
             export BACKEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/backend:latest
             export FRONTEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/frontend:latest
             
-            # 6. Start containers
+            # 8. Start containers
             echo "=== Starting containers ==="
             docker compose -f docker-compose.prod.yml up -d --remove-orphans || {
               echo "Failed to start containers"
@@ -230,13 +258,13 @@ jobs:
             # Wait for containers to start
             sleep 5
             
-            # 7. Run migrations
+            # 9. Run migrations
             echo "=== Running database migrations ==="
             docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate --noinput || {
               echo "Warning: Migrations failed, but continuing..."
             }
             
-            # 8. Collect static files
+            # 10. Collect static files
             echo "=== Collecting static files ==="
             docker compose -f docker-compose.prod.yml exec -T backend python manage.py collectstatic --noinput || {
               echo "Warning: Static files collection failed, but continuing..."
