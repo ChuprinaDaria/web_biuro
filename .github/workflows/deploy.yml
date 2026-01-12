@@ -176,49 +176,51 @@ jobs:
               exit 1
             }
             
-            # Pull latest images (lowercase repository name)
+            # 1. Pull latest images (lowercase repository name)
             echo "=== Pulling latest Docker images ==="
             docker pull ghcr.io/chuprinadaria/web_biuro/backend:latest || true
             docker pull ghcr.io/chuprinadaria/web_biuro/frontend:latest || true
             
-            # Stop and remove old containers
+            # 2. Get code (handle non-empty directory issue)
+            if [ ! -d ".git" ]; then
+              echo "=== Initializing repository ==="
+              git init
+              git remote add origin https://x-access-token:${TOKEN}@github.com/chuprinadaria/web_biuro.git || git remote set-url origin https://x-access-token:${TOKEN}@github.com/chuprinadaria/web_biuro.git
+              git fetch origin main
+              git checkout -f main
+            else
+              echo "=== Updating repository ==="
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+            
+            # 3. Now that docker-compose.prod.yml exists, stop old containers
             echo "=== Stopping old containers ==="
             docker compose -f docker-compose.prod.yml down --remove-orphans || true
             
-            # Clone or Pull repository
-            if [ ! -d ".git" ]; then
-              echo "=== Initializing repository ==="
-              git clone https://x-access-token:${TOKEN}@github.com/chuprinadaria/web_biuro.git . || {
-                echo "Error: Failed to clone repository"
-                exit 1
-              }
-            else
-              echo "=== Updating repository ==="
-              git pull origin main || true
-            fi
-            
-            # Create .env file from GitHub Secrets
+            # 4. Create .env file from GitHub Secrets
+            echo "=== Creating .env file ==="
             cat > .env << EOF
-            SECRET_KEY=$SECRET_KEY
-            DEBUG=$DEBUG
-            ALLOWED_HOSTS=$ALLOWED_HOSTS
-            DATABASE_URL=$DATABASE_URL
-            CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
-            EMAIL_BACKEND=$EMAIL_BACKEND
-            EMAIL_HOST=$EMAIL_HOST
-            EMAIL_PORT=$EMAIL_PORT
-            EMAIL_USE_TLS=$EMAIL_USE_TLS
-            EMAIL_HOST_USER=$EMAIL_HOST_USER
-            EMAIL_HOST_PASSWORD=$EMAIL_HOST_PASSWORD
-            DEFAULT_FROM_EMAIL=$DEFAULT_FROM_EMAIL
-            SERVER_EMAIL=$SERVER_EMAIL
-            EOF
+SECRET_KEY=$SECRET_KEY
+DEBUG=$DEBUG
+ALLOWED_HOSTS=$ALLOWED_HOSTS
+DATABASE_URL=$DATABASE_URL
+CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+EMAIL_BACKEND=$EMAIL_BACKEND
+EMAIL_HOST=$EMAIL_HOST
+EMAIL_PORT=$EMAIL_PORT
+EMAIL_USE_TLS=$EMAIL_USE_TLS
+EMAIL_HOST_USER=$EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD=$EMAIL_HOST_PASSWORD
+DEFAULT_FROM_EMAIL=$DEFAULT_FROM_EMAIL
+SERVER_EMAIL=$SERVER_EMAIL
+EOF
             
-            # Update docker-compose with new images (lowercase repository name)
+            # 5. Set image environment variables
             export BACKEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/backend:latest
             export FRONTEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/frontend:latest
             
-            # Start containers
+            # 6. Start containers
             echo "=== Starting containers ==="
             docker compose -f docker-compose.prod.yml up -d --remove-orphans || {
               echo "Failed to start containers"
