@@ -112,6 +112,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
+          # Django Settings
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DEBUG: ${{ secrets.DEBUG }}
+          ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+          # Database
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # CORS
+          CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
+          # Email Settings
+          EMAIL_BACKEND: ${{ secrets.EMAIL_BACKEND }}
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
+          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+          DEFAULT_FROM_EMAIL: ${{ secrets.DEFAULT_FROM_EMAIL }}
+          SERVER_EMAIL: ${{ secrets.SERVER_EMAIL }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
@@ -131,6 +148,23 @@ jobs:
             
             # Pull latest code
             git pull origin main || true
+            
+            # Create .env file from GitHub Secrets
+            cat > .env << EOF
+            SECRET_KEY=$SECRET_KEY
+            DEBUG=$DEBUG
+            ALLOWED_HOSTS=$ALLOWED_HOSTS
+            DATABASE_URL=$DATABASE_URL
+            CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+            EMAIL_BACKEND=$EMAIL_BACKEND
+            EMAIL_HOST=$EMAIL_HOST
+            EMAIL_PORT=$EMAIL_PORT
+            EMAIL_USE_TLS=$EMAIL_USE_TLS
+            EMAIL_HOST_USER=$EMAIL_HOST_USER
+            EMAIL_HOST_PASSWORD=$EMAIL_HOST_PASSWORD
+            DEFAULT_FROM_EMAIL=$DEFAULT_FROM_EMAIL
+            SERVER_EMAIL=$SERVER_EMAIL
+            EOF
             
             # Update docker-compose with new images
             export BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest

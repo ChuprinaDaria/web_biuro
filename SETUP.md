@@ -12,14 +12,16 @@
 Для автоматичного деплою додайте наступні secrets в GitHub репозиторії:
 
 1. Перейдіть в Settings → Secrets and variables → Actions
-2. Додайте наступні secrets:
+2. Додайте всі secrets з файлу `GITHUB_SECRETS.md`
 
-```
-SSH_HOST=your-server-ip-or-domain
-SSH_USER=your-ssh-username
-SSH_PRIVATE_KEY=your-private-ssh-key
-DEPLOY_PATH=/path/to/atbalance/on/server
-```
+**Обов'язкові secrets:**
+- `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `DEPLOY_PATH` - для деплою
+- `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` - Django налаштування
+- `DATABASE_URL` - база даних
+- `CORS_ALLOWED_ORIGINS` - CORS налаштування
+- `EMAIL_*` - налаштування email
+
+Детальний список та опис дивіться в `GITHUB_SECRETS.md`
 
 ### Як отримати SSH_PRIVATE_KEY:
 
