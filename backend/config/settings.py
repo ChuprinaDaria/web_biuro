@@ -25,7 +25,12 @@ SECRET_KEY = "django-insecure-wychx%gin(u0o^_6sizs4s5ly6*_m@5mke=27qsbh$f%l%yx6$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'atbalance.pl',
+    'www.atbalance.pl',
+]
 
 
 # Application definition
@@ -138,6 +143,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Vite default port
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "https://atbalance.pl",
+    "https://www.atbalance.pl",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
