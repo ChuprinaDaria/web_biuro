@@ -112,6 +112,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_ACTOR: ${{ github.actor }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           # Django Settings
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEBUG: ${{ secrets.DEBUG }}
@@ -134,14 +135,14 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }} || exit 1
+            cd $DEPLOY_PATH || exit 1
             
             # Login to GitHub Container Registry
-            echo $GITHUB_TOKEN | docker login ${{ env.REGISTRY }} -u $GITHUB_ACTOR --password-stdin
+            echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
             
             # Pull latest images
-            docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest || true
-            docker pull ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest || true
+            docker pull ghcr.io/ChuprinaDaria/web_biuro/backend:latest || true
+            docker pull ghcr.io/ChuprinaDaria/web_biuro/frontend:latest || true
             
             # Stop and remove old containers
             docker-compose -f docker-compose.prod.yml down || true
@@ -167,8 +168,8 @@ jobs:
             EOF
             
             # Update docker-compose with new images
-            export BACKEND_IMAGE=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
-            export FRONTEND_IMAGE=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+            export BACKEND_IMAGE=ghcr.io/ChuprinaDaria/web_biuro/backend:latest
+            export FRONTEND_IMAGE=ghcr.io/ChuprinaDaria/web_biuro/frontend:latest
             docker-compose -f docker-compose.prod.yml up -d
             
             # Clean up old images
