@@ -16,6 +16,7 @@
 | `SSH_USER` | Користувач для SSH підключення | `deploy` |
 | `SSH_PRIVATE_KEY` | Приватний SSH ключ | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
 | `DEPLOY_PATH` | Шлях до проекту на сервері | `/var/www/atbalance` |
+| `GHCR_USERNAME` | GitHub username (lowercase) для Docker registry | `chuprinadaria` |
 
 ### Django Settings
 
@@ -80,17 +81,25 @@ SERVER_EMAIL=biuro@atbalance.pl
 
 ## Генерація SECRET_KEY
 
-Виконайте на локальній машині:
+### Швидкий спосіб (локально):
 
 ```bash
-python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-Або в Docker контейнері:
+### Або в Docker контейнері:
 
 ```bash
 docker-compose exec backend python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
+
+### Приклад згенерованого ключа:
+
+```
+*$2=m_r*6u*(%*$^*2ta&(sxq%n=7)dwqow*^ii!!8dd8%dao(
+```
+
+**⚠️ УВАГА:** Кожен раз генерується унікальний ключ. Скопіюйте згенерований ключ і додайте його в GitHub Secrets.
 
 ## Перевірка Secrets
 
