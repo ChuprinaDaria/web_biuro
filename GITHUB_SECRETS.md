@@ -16,7 +16,8 @@
 | `SSH_USER` | Користувач для SSH підключення | `deploy` |
 | `SSH_PRIVATE_KEY` | Приватний SSH ключ | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
 | `DEPLOY_PATH` | Шлях до проекту на сервері | `/var/www/atbalance` |
-| `GHCR_USERNAME` | GitHub username (lowercase) для Docker registry | `chuprinadaria` |
+
+**Примітка:** `GHCR_USERNAME` більше не потрібен як secret - він автоматично використовує GitHub username з `github.actor`.
 
 ### Django Settings
 

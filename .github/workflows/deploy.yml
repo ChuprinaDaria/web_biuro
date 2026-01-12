@@ -110,7 +110,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_USERNAME: ${{ github.actor }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           # Django Settings
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
