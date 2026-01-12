@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
+import { apiService } from '../services/api';
 
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [contactInfo, setContactInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const {
     register,
@@ -13,26 +16,36 @@ const Contact = () => {
     reset,
   } = useForm();
 
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const data = await apiService.getContactInfo();
+        setContactInfo(data);
+      } catch (error) {
+        console.error('Error loading contact info:', error);
+        // Fallback to default data
+        setContactInfo({
+          phone: '+48 453 516 366',
+          email: 'biuro@atbalance.pl',
+          address: 'Warszawa, Polska',
+          working_hours: 'Pn-Pt: 9:00-17:00',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setSubmitStatus(null);
 
     try {
-      // TODO: Replace with actual API endpoint when backend is ready
-      const response = await fetch('/api/contact/submit/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        setSubmitStatus('success');
-        reset();
-      } else {
-        setSubmitStatus('error');
-      }
+      await apiService.submitContact(data);
+      setSubmitStatus('success');
+      reset();
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmitStatus('error');
@@ -41,32 +54,32 @@ const Contact = () => {
     }
   };
 
-  const contactInfo = [
+  const contactItems = contactInfo ? [
     {
       icon: <FaPhone className="text-3xl text-primary" />,
       title: 'Telefon',
-      content: '+48 453 516 366',
-      link: 'tel:+48453516366',
+      content: contactInfo.phone,
+      link: contactInfo.phone ? `tel:${contactInfo.phone.replace(/\s/g, '')}` : null,
     },
     {
       icon: <FaEnvelope className="text-3xl text-primary" />,
       title: 'Email',
-      content: 'biuro@atbalance.pl',
-      link: 'mailto:biuro@atbalance.pl',
+      content: contactInfo.email,
+      link: contactInfo.email ? `mailto:${contactInfo.email}` : null,
     },
     {
       icon: <FaMapMarkerAlt className="text-3xl text-primary" />,
       title: 'Adres',
-      content: 'Warszawa, Polska',
+      content: contactInfo.address || 'Warszawa, Polska',
       link: null,
     },
     {
       icon: <FaClock className="text-3xl text-primary" />,
       title: 'Godziny pracy',
-      content: 'Pn-Pt: 9:00-17:00',
+      content: contactInfo.working_hours || 'Pn-Pt: 9:00-17:00',
       link: null,
     },
-  ];
+  ] : [];
 
   return (
     <section id="contact" className="section-padding bg-accent">
@@ -87,26 +100,30 @@ const Contact = () => {
             <h3 className="text-2xl font-semibold text-secondary mb-6">
               Dane kontaktowe
             </h3>
-            <div className="space-y-6">
-              {contactInfo.map((info, index) => (
-                <div key={index} className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">{info.icon}</div>
-                  <div>
-                    <h4 className="font-semibold text-secondary mb-1">{info.title}</h4>
-                    {info.link ? (
-                      <a
-                        href={info.link}
-                        className="text-gray-600 hover:text-primary transition-colors"
-                      >
-                        {info.content}
-                      </a>
-                    ) : (
-                      <p className="text-gray-600">{info.content}</p>
-                    )}
+            {loading ? (
+              <div className="text-gray-600">Ładowanie danych kontaktowych...</div>
+            ) : (
+              <div className="space-y-6">
+                {contactItems.map((info, index) => (
+                  <div key={index} className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">{info.icon}</div>
+                    <div>
+                      <h4 className="font-semibold text-secondary mb-1">{info.title}</h4>
+                      {info.link ? (
+                        <a
+                          href={info.link}
+                          className="text-gray-600 hover:text-primary transition-colors"
+                        >
+                          {info.content}
+                        </a>
+                      ) : (
+                        <p className="text-gray-600">{info.content}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-8 p-6 bg-white rounded-xl shadow-lg">
               <h4 className="font-semibold text-secondary mb-3">

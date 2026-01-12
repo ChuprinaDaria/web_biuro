@@ -1,7 +1,48 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-scroll';
 import { FaChevronDown } from 'react-icons/fa';
+import { apiService } from '../services/api';
 
 const Hero = () => {
+  const [heroData, setHeroData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHero = async () => {
+      try {
+        const data = await apiService.getHero();
+        setHeroData(data);
+      } catch (error) {
+        console.error('Error loading hero data:', error);
+        // Fallback to default data
+        setHeroData({
+          title: 'Profesjonalne Usługi Księgowe',
+          subtitle: 'Zajmiemy się Twoją księgowością - Ty zajmij się rozwojem firmy. Doświadczenie, terminowość i indywidualne podejście.',
+          cta_text: 'Skontaktuj się z nami',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHero();
+  }, []);
+
+  if (loading) {
+    return (
+      <section
+        id="hero"
+        className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary via-gray-800 to-primary overflow-hidden"
+      >
+        <div className="text-white text-xl">Ładowanie...</div>
+      </section>
+    );
+  }
+
+  const heroImageStyle = heroData?.hero_image
+    ? { backgroundImage: `url(${heroData.hero_image})` }
+    : {};
+
   return (
     <section
       id="hero"
@@ -14,15 +55,21 @@ const Hero = () => {
         }}></div>
       </div>
 
+      {/* Hero Image Background */}
+      {heroData?.hero_image && (
+        <div className="absolute inset-0 opacity-20" style={heroImageStyle}>
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary via-gray-800 to-primary"></div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="container-custom px-4 md:px-8 z-10">
         <div className="text-center text-white">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
-            Profesjonalne Usługi Księgowe
+            {heroData?.title || 'Profesjonalne Usługi Księgowe'}
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-gray-200 max-w-3xl mx-auto">
-            Zajmiemy się Twoją księgowością - Ty zajmij się rozwojem firmy.
-            Doświadczenie, terminowość i indywidualne podejście.
+            {heroData?.subtitle || 'Zajmiemy się Twoją księgowością - Ty zajmij się rozwojem firmy. Doświadczenie, terminowość i indywidualne podejście.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
@@ -32,7 +79,7 @@ const Hero = () => {
               duration={500}
               className="btn-primary cursor-pointer"
             >
-              Skontaktuj się z nami
+              {heroData?.cta_text || 'Skontaktuj się z nami'}
             </Link>
             <Link
               to="services"
