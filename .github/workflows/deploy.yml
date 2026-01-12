@@ -172,9 +172,37 @@ jobs:
             export FRONTEND_IMAGE=ghcr.io/ChuprinaDaria/web_biuro/frontend:latest
             docker-compose -f docker-compose.prod.yml up -d
             
+            # Wait for containers to start
+            sleep 5
+            
+            # Check if containers are running
+            echo "=== Checking running containers ==="
+            docker ps
+            
+            # Check if ports are listening
+            echo "=== Checking ports 5174 (frontend) and 8001 (backend) ==="
+            netstat -tlnp | grep -E '5174|8001' || ss -tlnp | grep -E '5174|8001' || echo "Warning: Could not check ports. Make sure netstat or ss is installed."
+            
+            # Verify containers are healthy
+            echo "=== Container health check ==="
+            if docker ps | grep -q "web_biuro.*backend"; then
+              echo "✓ Backend container is running"
+            else
+              echo "✗ Backend container is NOT running!"
+              docker-compose -f docker-compose.prod.yml logs backend
+              exit 1
+            fi
+            
+            if docker ps | grep -q "web_biuro.*frontend"; then
+              echo "✓ Frontend container is running"
+            else
+              echo "✗ Frontend container is NOT running!"
+              docker-compose -f docker-compose.prod.yml logs frontend
+              exit 1
+            fi
+            
             # Clean up old images
             docker image prune -f
             
-            # Show running containers
-            docker ps
+            echo "=== Deployment completed successfully ==="
 
