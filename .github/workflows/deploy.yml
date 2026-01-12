@@ -137,18 +137,25 @@ jobs:
           script: |
             cd $DEPLOY_PATH || exit 1
             
-            # Login to GitHub Container Registry
-            echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+            # Login to GitHub Container Registry (non-interactive)
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin || {
+              echo "Failed to login to GitHub Container Registry"
+              exit 1
+            }
             
-            # Pull latest images
-            docker pull ghcr.io/ChuprinaDaria/web_biuro/backend:latest || true
-            docker pull ghcr.io/ChuprinaDaria/web_biuro/frontend:latest || true
+            # Pull latest images (lowercase repository name)
+            docker pull ghcr.io/chuprinadaria/web_biuro/backend:latest || true
+            docker pull ghcr.io/chuprinadaria/web_biuro/frontend:latest || true
             
-            # Stop and remove old containers
-            docker-compose -f docker-compose.prod.yml down || true
+            # Stop and remove old containers (try docker compose first, fallback to docker-compose)
+            docker compose -f docker-compose.prod.yml down || docker-compose -f docker-compose.prod.yml down || true
             
-            # Pull latest code
-            git pull origin main || true
+            # Pull latest code (if git repo exists)
+            if [ -d .git ]; then
+              git pull origin main || true
+            else
+              echo "Warning: Not a git repository, skipping git pull"
+            fi
             
             # Create .env file from GitHub Secrets
             cat > .env << EOF
@@ -167,10 +174,15 @@ jobs:
             SERVER_EMAIL=$SERVER_EMAIL
             EOF
             
-            # Update docker-compose with new images
-            export BACKEND_IMAGE=ghcr.io/ChuprinaDaria/web_biuro/backend:latest
-            export FRONTEND_IMAGE=ghcr.io/ChuprinaDaria/web_biuro/frontend:latest
-            docker-compose -f docker-compose.prod.yml up -d
+            # Update docker-compose with new images (lowercase repository name)
+            export BACKEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/backend:latest
+            export FRONTEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/frontend:latest
+            
+            # Start containers (try docker compose first, fallback to docker-compose)
+            docker compose -f docker-compose.prod.yml up -d || docker-compose -f docker-compose.prod.yml up -d || {
+              echo "Failed to start containers"
+              exit 1
+            }
             
             # Wait for containers to start
             sleep 5
@@ -185,19 +197,19 @@ jobs:
             
             # Verify containers are healthy
             echo "=== Container health check ==="
-            if docker ps | grep -q "web_biuro.*backend"; then
+            if docker ps | grep -q "atbalance_backend"; then
               echo "✓ Backend container is running"
             else
               echo "✗ Backend container is NOT running!"
-              docker-compose -f docker-compose.prod.yml logs backend
+              docker compose -f docker-compose.prod.yml logs backend 2>/dev/null || docker-compose -f docker-compose.prod.yml logs backend 2>/dev/null || docker logs atbalance_backend 2>/dev/null || echo "Could not get backend logs"
               exit 1
             fi
             
-            if docker ps | grep -q "web_biuro.*frontend"; then
+            if docker ps | grep -q "atbalance_frontend"; then
               echo "✓ Frontend container is running"
             else
               echo "✗ Frontend container is NOT running!"
-              docker-compose -f docker-compose.prod.yml logs frontend
+              docker compose -f docker-compose.prod.yml logs frontend 2>/dev/null || docker-compose -f docker-compose.prod.yml logs frontend 2>/dev/null || docker logs atbalance_frontend 2>/dev/null || echo "Could not get frontend logs"
               exit 1
             fi
             
