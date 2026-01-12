@@ -140,10 +140,6 @@ jobs:
             
             # Set GHCR username (use GITHUB_ACTOR as fallback if GHCR_USERNAME is not set)
             GHCR_USERNAME="${GHCR_USERNAME:-${GITHUB_ACTOR}}"
-            if [ -z "$GHCR_USERNAME" ]; then
-              echo "Error: GHCR_USERNAME is not set and GITHUB_ACTOR is not available"
-              exit 1
-            fi
             
             # Use GHCR_TOKEN if available, fallback to GITHUB_TOKEN
             TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN}}"
