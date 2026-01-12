@@ -13,16 +13,33 @@
 
 ## Встановлення
 
-### 1. Скопіюйте конфігурацію
+### 1. Скопіюйте конфігурацію на сервер
 
+**Варіант 1: Через SCP (рекомендовано)**
 ```bash
+scp nginx-atbalance.conf root@5.78.152.139:/etc/nginx/sites-available/atbalance
+```
+
+**Варіант 2: Через SSH з stdin**
+```bash
+cat nginx-atbalance.conf | ssh root@5.78.152.139 "cat > /etc/nginx/sites-available/atbalance"
+```
+
+**Варіант 3: Якщо вже на сервері**
+```bash
+# Скопіюйте файл локально
 sudo cp nginx-atbalance.conf /etc/nginx/sites-available/atbalance
 ```
 
 ### 2. Створіть символічне посилання
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/atbalance /etc/nginx/sites-enabled/atbalance
+ssh root@5.78.152.139 "ln -sf /etc/nginx/sites-available/atbalance /etc/nginx/sites-enabled/atbalance"
+```
+
+Або якщо вже на сервері:
+```bash
+sudo ln -sf /etc/nginx/sites-available/atbalance /etc/nginx/sites-enabled/atbalance
 ```
 
 **Альтернативно:** Якщо використовується `include` в основному `nginx.conf`, додайте:
@@ -35,13 +52,29 @@ include /etc/nginx/sites-available/atbalance;
 ### 3. Перевірте конфігурацію
 
 ```bash
+ssh root@5.78.152.139 "nginx -t"
+```
+
+Або якщо вже на сервері:
+```bash
 sudo nginx -t
 ```
 
 ### 4. Перезавантажте Nginx
 
 ```bash
+ssh root@5.78.152.139 "systemctl reload nginx"
+```
+
+Або якщо вже на сервері:
+```bash
 sudo systemctl reload nginx
+```
+
+### 5. Перевірте статус Nginx
+
+```bash
+ssh root@5.78.152.139 "systemctl status nginx"
 ```
 
 ## SSL Сертифікати
