@@ -2,24 +2,34 @@
 
 ## Конфігурація для atbalance.pl
 
-Файл `nginx-atbalance.conf` містить повну конфігурацію Nginx для проекту ATBalance з нестандартними портами:
+Файл `nginx-atbalance.conf` містить конфігурацію Nginx для проекту ATBalance з нестандартними портами:
 - **Frontend**: `host.docker.internal:5174` (якщо Nginx в Docker) або `127.0.0.1:5174` (якщо Nginx на хості)
 - **Backend**: `host.docker.internal:8001` (якщо Nginx в Docker) або `127.0.0.1:8001` (якщо Nginx на хості)
 
-**Примітка:** Якщо Nginx працює на хост-машині (не в Docker), змініть `host.docker.internal` на `127.0.0.1` в upstream блоках.
+**Важливо:** 
+- Файл містить тільки `upstream` та `server` блоки (без `events {}` та `http {}`)
+- Це окремий файл конфігурації, який буде включений в основний `nginx.conf` через `include`
+- Якщо Nginx працює на хост-машині (не в Docker), змініть `host.docker.internal` на `127.0.0.1` в upstream блоках
 
 ## Встановлення
 
 ### 1. Скопіюйте конфігурацію
 
 ```bash
-sudo cp nginx-atbalance.conf /etc/nginx/sites-available/atbalance.pl
+sudo cp nginx-atbalance.conf /etc/nginx/sites-available/atbalance
 ```
 
 ### 2. Створіть символічне посилання
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/atbalance.pl /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/atbalance /etc/nginx/sites-enabled/atbalance
+```
+
+**Альтернативно:** Якщо використовується `include` в основному `nginx.conf`, додайте:
+
+```nginx
+# В /etc/nginx/nginx.conf всередині блоку http {}
+include /etc/nginx/sites-available/atbalance;
 ```
 
 ### 3. Перевірте конфігурацію
