@@ -33,6 +33,15 @@ ALLOWED_HOSTS = config(
     cast=Csv()
 )
 
+# Security settings for reverse proxy (nginx)
+# Tell Django to trust the X-Forwarded-Proto header from nginx
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Use secure cookies (HTTPS only)
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+# Use X-Forwarded-Host header to determine the correct host
+USE_X_FORWARDED_HOST = True
+
 
 # Application definition
 
