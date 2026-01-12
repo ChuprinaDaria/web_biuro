@@ -181,20 +181,20 @@ jobs:
             docker pull ghcr.io/chuprinadaria/web_biuro/backend:latest || true
             docker pull ghcr.io/chuprinadaria/web_biuro/frontend:latest || true
             
-            # Stop and remove old containers (try docker compose first, fallback to docker-compose)
+            # Stop and remove old containers
             echo "=== Stopping old containers ==="
-            docker compose -f docker-compose.prod.yml down || docker-compose -f docker-compose.prod.yml down || true
+            docker compose -f docker-compose.prod.yml down --remove-orphans || true
             
-            # Pull latest code (if git repo exists, otherwise clone it)
-            if [ -d .git ]; then
-              echo "=== Pulling latest code from git ==="
-              git pull origin main || true
+            # Clone or Pull repository
+            if [ ! -d ".git" ]; then
+              echo "=== Initializing repository ==="
+              git clone https://x-access-token:${TOKEN}@github.com/chuprinadaria/web_biuro.git . || {
+                echo "Error: Failed to clone repository"
+                exit 1
+              }
             else
-              echo "=== Not a git repository ==="
-              if [ ! -f "docker-compose.prod.yml" ]; then
-                echo "Warning: docker-compose.prod.yml not found. This might be the first deployment."
-                echo "If this is the first deployment, you may need to clone the repository manually or ensure files are present."
-              fi
+              echo "=== Updating repository ==="
+              git pull origin main || true
             fi
             
             # Create .env file from GitHub Secrets
@@ -218,8 +218,9 @@ jobs:
             export BACKEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/backend:latest
             export FRONTEND_IMAGE=ghcr.io/chuprinadaria/web_biuro/frontend:latest
             
-            # Start containers (try docker compose first, fallback to docker-compose)
-            docker compose -f docker-compose.prod.yml up -d || docker-compose -f docker-compose.prod.yml up -d || {
+            # Start containers
+            echo "=== Starting containers ==="
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans || {
               echo "Failed to start containers"
               exit 1
             }
@@ -241,7 +242,7 @@ jobs:
               echo "✓ Backend container is running"
             else
               echo "✗ Backend container is NOT running!"
-              docker compose -f docker-compose.prod.yml logs backend 2>/dev/null || docker-compose -f docker-compose.prod.yml logs backend 2>/dev/null || docker logs atbalance_backend 2>/dev/null || echo "Could not get backend logs"
+              docker compose -f docker-compose.prod.yml logs backend 2>/dev/null || docker logs atbalance_backend 2>/dev/null || echo "Could not get backend logs"
               exit 1
             fi
             
@@ -249,7 +250,7 @@ jobs:
               echo "✓ Frontend container is running"
             else
               echo "✗ Frontend container is NOT running!"
-              docker compose -f docker-compose.prod.yml logs frontend 2>/dev/null || docker-compose -f docker-compose.prod.yml logs frontend 2>/dev/null || docker logs atbalance_frontend 2>/dev/null || echo "Could not get frontend logs"
+              docker compose -f docker-compose.prod.yml logs frontend 2>/dev/null || docker logs atbalance_frontend 2>/dev/null || echo "Could not get frontend logs"
               exit 1
             fi
             
