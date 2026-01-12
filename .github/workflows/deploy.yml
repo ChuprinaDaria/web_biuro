@@ -111,6 +111,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USERNAME: ${{ github.actor }}
+          GITHUB_ACTOR: ${{ github.actor }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           # Django Settings
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
@@ -135,6 +136,13 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd $DEPLOY_PATH || exit 1
+            
+            # Set GHCR username (use GITHUB_ACTOR as fallback if GHCR_USERNAME is not set)
+            GHCR_USERNAME="${GHCR_USERNAME:-${GITHUB_ACTOR}}"
+            if [ -z "$GHCR_USERNAME" ]; then
+              echo "Error: GHCR_USERNAME is not set and GITHUB_ACTOR is not available"
+              exit 1
+            fi
             
             # Login to GitHub Container Registry (non-interactive)
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin || {
