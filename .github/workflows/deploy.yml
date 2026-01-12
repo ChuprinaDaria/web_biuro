@@ -230,6 +230,18 @@ jobs:
             # Wait for containers to start
             sleep 5
             
+            # 7. Run migrations
+            echo "=== Running database migrations ==="
+            docker compose -f docker-compose.prod.yml exec -T backend python manage.py migrate --noinput || {
+              echo "Warning: Migrations failed, but continuing..."
+            }
+            
+            # 8. Collect static files
+            echo "=== Collecting static files ==="
+            docker compose -f docker-compose.prod.yml exec -T backend python manage.py collectstatic --noinput || {
+              echo "Warning: Static files collection failed, but continuing..."
+            }
+            
             # Check if containers are running
             echo "=== Checking running containers ==="
             docker ps
